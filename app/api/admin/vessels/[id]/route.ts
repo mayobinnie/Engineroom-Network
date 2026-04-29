@@ -44,7 +44,7 @@ export async function PATCH(
   const data = parsed.data;
 
   try {
-    const updated = await prisma.vesselType.update({
+    const updated = await prisma.vesselClass.update({
       where: { id },
       data: {
         summary: data.summary,

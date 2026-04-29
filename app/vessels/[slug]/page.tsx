@@ -13,7 +13,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const vesselType = await prisma.vesselType.findUnique({ where: { slug } });
+  const vesselType = await prisma.vesselClass.findUnique({ where: { slug } });
   if (!vesselType || !vesselType.isPublished) return { title: "Vessel type not found" };
 
   const title = vesselType.metaTitle ?? `${vesselType.name} | Engineering Reference | EngineRoom Network`;
@@ -33,7 +33,7 @@ export default async function VesselTypePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const vesselType = await prisma.vesselType.findUnique({ where: { slug } });
+  const vesselType = await prisma.vesselClass.findUnique({ where: { slug } });
 
   if (!vesselType || !vesselType.isPublished) notFound();
 

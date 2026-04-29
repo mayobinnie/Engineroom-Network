@@ -20,8 +20,8 @@ export default async function AdminDashboard() {
       prisma.partCategory.count(),
       prisma.oEM.count(),
       prisma.user.count(),
-      prisma.vesselType.count(),
-      prisma.vesselType.count({ where: { isPublished: true } }),
+      prisma.vesselClass.count(),
+      prisma.vesselClass.count({ where: { isPublished: true } }),
     ]);
 
   return (

@@ -32,7 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { isPublished: true },
       select: { slug: true, updatedAt: true },
     }),
-    prisma.vesselType.findMany({
+    prisma.vesselClass.findMany({
       where: { isPublished: true },
       select: { slug: true, updatedAt: true },
     }),

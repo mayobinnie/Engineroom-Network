@@ -22,7 +22,7 @@ CREATE TYPE "VesselCategory" AS ENUM (
 
 -- ─── VesselType ────────────────────────────────────────────────────────────
 
-CREATE TABLE "VesselType" (
+CREATE TABLE "VesselClass" (
   "id" TEXT NOT NULL PRIMARY KEY,
   "slug" TEXT NOT NULL UNIQUE,
   "name" TEXT NOT NULL,
@@ -47,6 +47,6 @@ CREATE TABLE "VesselType" (
   "updatedAt" TIMESTAMP(3) NOT NULL
 );
 
-CREATE INDEX "VesselType_slug_idx" ON "VesselType"("slug");
-CREATE INDEX "VesselType_category_idx" ON "VesselType"("category");
-CREATE INDEX "VesselType_isPublished_idx" ON "VesselType"("isPublished");
+CREATE INDEX "VesselClass_slug_idx" ON "VesselClass"("slug");
+CREATE INDEX "VesselClass_category_idx" ON "VesselClass"("category");
+CREATE INDEX "VesselClass_isPublished_idx" ON "VesselClass"("isPublished");

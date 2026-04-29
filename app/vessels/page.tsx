@@ -27,7 +27,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export default async function VesselsIndexPage() {
-  const vesselTypes = await prisma.vesselType.findMany({
+  const vesselTypes = await prisma.vesselClass.findMany({
     where: { isPublished: true },
     orderBy: [{ category: "asc" }, { name: "asc" }],
   });

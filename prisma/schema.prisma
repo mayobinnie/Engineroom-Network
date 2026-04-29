@@ -112,7 +112,7 @@ enum Availability {
 // fits vary; vessels of the same class can have substantially different
 // equipment loadouts depending on yard, build year, and owner preferences.
 
-model VesselType {
+model VesselClass {
   id          String  @id @default(cuid())
   slug        String  @unique // "vlcc-tanker", "lng-carrier", "container-ship-2500-teu"
   name        String // "VLCC (Very Large Crude Carrier)"

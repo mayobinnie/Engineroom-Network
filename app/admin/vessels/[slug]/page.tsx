@@ -20,7 +20,7 @@ export default async function AdminVesselEditPage({
   await requireAdmin();
   const { slug } = await params;
 
-  const vesselType = await prisma.vesselType.findUnique({ where: { slug } });
+  const vesselType = await prisma.vesselClass.findUnique({ where: { slug } });
   if (!vesselType) notFound();
 
   return (

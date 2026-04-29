@@ -14,7 +14,7 @@ export const metadata = {
 export default async function AdminVesselsPage() {
   await requireAdmin();
 
-  const vesselTypes = await prisma.vesselType.findMany({
+  const vesselTypes = await prisma.vesselClass.findMany({
     orderBy: [{ category: "asc" }, { name: "asc" }],
   });
 

@@ -12,7 +12,7 @@
 -- equipment depending on yard, build year, and owner specifications.
 -- ============================================================================
 
-INSERT INTO "VesselType" (
+INSERT INTO "VesselClass" (
   "id", "slug", "name", "shortName", "category", "summary", "description",
   "typicalSize", "propulsionNotes", "auxiliaryNotes", "commonOEMs",
   "engineeringChallenges", "sourcingNotes", "isPublished", "updatedAt"
@@ -270,5 +270,5 @@ ON CONFLICT ("slug") DO UPDATE SET
 -- before it appears on the public site.
 
 -- Verification:
--- SELECT COUNT(*) FROM "VesselType";              -- should be 18
--- SELECT COUNT(*) FROM "VesselType" WHERE "isPublished" = true;  -- should be 0
+-- SELECT COUNT(*) FROM "VesselClass";              -- should be 18
+-- SELECT COUNT(*) FROM "VesselClass" WHERE "isPublished" = true;  -- should be 0
