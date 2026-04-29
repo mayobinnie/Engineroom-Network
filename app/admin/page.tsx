@@ -12,7 +12,7 @@ export const metadata = {
 export default async function AdminDashboard() {
   await requireAdmin();
 
-  const [supplierCount, publishedCount, locationCount, categoryCount, oemCount, userCount] =
+  const [supplierCount, publishedCount, locationCount, categoryCount, oemCount, userCount, vesselCount, publishedVesselCount] =
     await Promise.all([
       prisma.supplier.count(),
       prisma.supplier.count({ where: { isPublished: true } }),
@@ -20,6 +20,8 @@ export default async function AdminDashboard() {
       prisma.partCategory.count(),
       prisma.oEM.count(),
       prisma.user.count(),
+      prisma.vesselType.count(),
+      prisma.vesselType.count({ where: { isPublished: true } }),
     ]);
 
   return (
@@ -35,8 +37,10 @@ export default async function AdminDashboard() {
 
             <div className="grid md:grid-cols-3 gap-4 mb-12">
               <Stat label="Suppliers (total)" value={supplierCount} />
-              <Stat label="Published" value={publishedCount} />
+              <Stat label="Published suppliers" value={publishedCount} />
               <Stat label="Members" value={userCount} />
+              <Stat label="Vessel types (total)" value={vesselCount} />
+              <Stat label="Published vessels" value={publishedVesselCount} />
               <Stat label="Locations" value={locationCount} />
               <Stat label="Part Categories" value={categoryCount} />
               <Stat label="OEMs" value={oemCount} />
@@ -60,6 +64,17 @@ export default async function AdminDashboard() {
               >
                 <h2 className="font-display font-bold text-lg text-hull mb-2">Add Supplier →</h2>
                 <p className="text-steel text-sm">Add a new supplier to the directory.</p>
+              </Link>
+              <Link
+                href="/admin/vessels"
+                className="block border border-mist rounded-sm p-6 bg-white hover:border-signal transition-colors md:col-span-2"
+              >
+                <h2 className="font-display font-bold text-lg text-hull mb-2">
+                  Review Vessel Type Guides →
+                </h2>
+                <p className="text-steel text-sm">
+                  18 draft guides ready for expert review. Each guide must be reviewed and corrected before publishing.
+                </p>
               </Link>
             </div>
           </div>

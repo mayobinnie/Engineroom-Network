@@ -20,14 +20,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/suppliers`, lastModified: now, priority: 0.9 },
     { url: `${base}/parts`, lastModified: now, priority: 0.9 },
     { url: `${base}/oem`, lastModified: now, priority: 0.9 },
+    { url: `${base}/vessels`, lastModified: now, priority: 0.9 },
   ];
 
   // Pull all directory data for dynamic URLs
-  const [locations, categories, oems, suppliers] = await Promise.all([
+  const [locations, categories, oems, suppliers, vesselTypes] = await Promise.all([
     prisma.location.findMany({ select: { slug: true, updatedAt: true, isMajorHub: true } }),
     prisma.partCategory.findMany({ select: { slug: true, updatedAt: true } }),
     prisma.oEM.findMany({ select: { slug: true, updatedAt: true } }),
     prisma.supplier.findMany({
+      where: { isPublished: true },
+      select: { slug: true, updatedAt: true },
+    }),
+    prisma.vesselType.findMany({
       where: { isPublished: true },
       select: { slug: true, updatedAt: true },
     }),
@@ -55,6 +60,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supplierPages: MetadataRoute.Sitemap = suppliers.map((s) => ({
     url: `${base}/supplier/${s.slug}`,
     lastModified: s.updatedAt,
+    priority: 0.8,
+  }));
+
+  // Vessel type reference guides
+  const vesselPages: MetadataRoute.Sitemap = vesselTypes.map((vt) => ({
+    url: `${base}/vessels/${vt.slug}`,
+    lastModified: vt.updatedAt,
     priority: 0.8,
   }));
 
@@ -89,6 +101,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...categoryPages,
     ...oemPages,
     ...supplierPages,
+    ...vesselPages,
     ...locationCategoryPages,
     ...oemLocationPages,
   ];

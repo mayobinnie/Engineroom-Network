@@ -101,6 +101,69 @@ enum Availability {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// VESSEL TYPES (Slice 4b)
+// ─────────────────────────────────────────────────────────────────────────────
+// Reference guides for major commercial vessel types. Each guide describes
+// typical equipment, common engineering challenges, and sourcing notes.
+// Built to be reviewed and refined by domain experts (Adam) before publishing.
+//
+// Critical: all `equipmentNotes` and similar editorial content is positioned
+// as general industry guidance, not vessel-specific specification. Real-world
+// fits vary; vessels of the same class can have substantially different
+// equipment loadouts depending on yard, build year, and owner preferences.
+
+model VesselType {
+  id          String  @id @default(cuid())
+  slug        String  @unique // "vlcc-tanker", "lng-carrier", "container-ship-2500-teu"
+  name        String // "VLCC (Very Large Crude Carrier)"
+  shortName   String // "VLCC"
+  category    VesselCategory
+
+  summary     String  @db.Text // 1-2 paragraph overview shown on listing pages
+  description String  @db.Text // longer-form description on the page
+
+  // Editorial content sections (all optional, all marked as "general guidance")
+  typicalSize       String? // e.g. "320,000 - 320,000 DWT, 330m LOA"
+  typicalCargo      String? @db.Text
+  propulsionNotes   String? @db.Text // typical engine configurations
+  auxiliaryNotes    String? @db.Text // typical aux engine and electrical
+  cargoSystemNotes  String? @db.Text
+  commonOEMs        String? @db.Text // common OEM ranges seen on this vessel type
+  engineeringChallenges String? @db.Text // common issues engineers encounter
+  sourcingNotes     String? @db.Text // suggestions on parts sourcing
+  
+  // SEO meta
+  metaTitle       String?
+  metaDescription String?
+
+  // Status: drafts not visible publicly until reviewed
+  isPublished Boolean @default(false)
+  reviewedBy  String? // who reviewed this (e.g., engineer name/credential)
+  reviewedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([category])
+  @@index([isPublished])
+}
+
+enum VesselCategory {
+  TANKER // crude, product, chemical
+  GAS_CARRIER // LNG, LPG
+  CONTAINER
+  BULK_CARRIER
+  GENERAL_CARGO
+  RO_RO
+  PASSENGER // ferry, cruise
+  OFFSHORE // OSV, AHTS, drillship
+  SPECIALIZED // heavy lift, cable layer, etc
+  NAVAL
+  WORKBOAT // tug, fishing
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER DIRECTORY (Slice 4a)
 // ─────────────────────────────────────────────────────────────────────────────
 // Curated directory of marine parts suppliers, structured for SEO.
