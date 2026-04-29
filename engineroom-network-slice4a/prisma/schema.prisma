@@ -1,0 +1,286 @@
+// EngineRoom Network database schema
+// Postgres database via Prisma, hosted on Supabase
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USERS & PROFILES
+// ─────────────────────────────────────────────────────────────────────────────
+// Authentication is handled by Clerk. We store a User record locally that
+// mirrors the Clerk user, identified by clerkId. This lets us own user data,
+// build relationships to other tables (posts, comments, etc.), and keeps
+// us portable if we ever migrate auth providers.
+//
+// Profile holds the marine-engineering-specific data: rank, vessel type,
+// specialism. Separated from User so we can iterate on profile structure
+// without touching authentication identity.
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique // Clerk's user ID (e.g., user_2abc123...)
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile?
+
+  @@index([clerkId])
+}
+
+model Profile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Display
+  displayName String?
+  headline    String? // e.g. "Chief Engineer | LNG carriers | MAN B&W expert"
+  bio         String? @db.Text
+
+  // Marine engineering identity
+  rank             EngineerRank?
+  primaryVesselType VesselType?
+  yearsExperience  Int?
+
+  // Location
+  homePort String?
+  country  String?
+
+  // Availability (for crew/specialist finder, populated later)
+  availability Availability @default(NOT_LOOKING)
+
+  // Visibility
+  isPublic Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([rank])
+  @@index([primaryVesselType])
+}
+
+enum EngineerRank {
+  CADET
+  FOURTH_ENGINEER
+  THIRD_ENGINEER
+  SECOND_ENGINEER
+  CHIEF_ENGINEER
+  MARINE_SUPERINTENDENT
+  SHIPYARD_ENGINEER
+  OFFSHORE_ENGINEER
+  ETO // Electro-Technical Officer
+  SURVEYOR
+  OTHER
+}
+
+enum VesselType {
+  TANKERS
+  CONTAINER_SHIPS
+  BULK_CARRIERS
+  LNG_LPG
+  OFFSHORE
+  CRUISE_PASSENGER
+  SPECIALISED
+  MULTIPLE
+}
+
+enum Availability {
+  AVAILABLE_NOW
+  AVAILABLE_30_DAYS
+  AVAILABLE_90_DAYS
+  CURRENTLY_WORKING
+  NOT_LOOKING
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUPPLIER DIRECTORY (Slice 4a)
+// ─────────────────────────────────────────────────────────────────────────────
+// Curated directory of marine parts suppliers, structured for SEO.
+// Editorial only at this stage, no transactions, no RFQs.
+// Designed to upgrade into a paid marketplace tier later (Slice 5) without
+// schema rework. Many-to-many relationships let suppliers serve multiple
+// locations, multiple part categories, and multiple OEM ranges.
+
+model Supplier {
+  id          String  @id @default(cuid())
+  slug        String  @unique // url-safe: "wilhelmsen-ship-management"
+  name        String
+  description String  @db.Text
+  website     String?
+  email       String?
+  phone       String?
+
+  // Editorial fields
+  founded         Int? // year founded
+  headquarters    String? // primary HQ city
+  servicesSummary String? @db.Text // 1-2 sentence summary for cards/listings
+
+  // SEO meta
+  metaTitle       String?
+  metaDescription String?
+
+  // Tier (for future marketplace upgrade path)
+  tier SupplierTier @default(BASIC)
+
+  // Status
+  isPublished Boolean @default(false) // false = draft, won't appear publicly
+  isVerified  Boolean @default(false) // future: verified marketplace tier
+
+  // Relationships (many-to-many)
+  locations  SupplierLocation[]
+  categories SupplierCategory[]
+  oems       SupplierOEM[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isPublished])
+  @@index([tier])
+}
+
+model Location {
+  id          String  @id @default(cuid())
+  slug        String  @unique // "singapore", "rotterdam", "houston-tx"
+  name        String // "Singapore", "Rotterdam", "Houston, TX"
+  country     String // "Singapore", "Netherlands", "United States"
+  region      Region // for filtering: ASIA_PACIFIC, EUROPE, etc.
+  description String? @db.Text // intro paragraph for SEO page
+  isMajorHub  Boolean @default(false) // for prioritisation in lists
+
+  metaTitle       String?
+  metaDescription String?
+
+  suppliers SupplierLocation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([region])
+}
+
+model PartCategory {
+  id          String  @id @default(cuid())
+  slug        String  @unique // "turbochargers", "fuel-injectors"
+  name        String // "Turbochargers", "Fuel Injectors"
+  description String? @db.Text
+  parentId    String? // for sub-categories later
+  parent      PartCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    PartCategory[] @relation("CategoryHierarchy")
+  sortOrder   Int     @default(0)
+
+  metaTitle       String?
+  metaDescription String?
+
+  suppliers SupplierCategory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+model OEM {
+  id          String  @id @default(cuid())
+  slug        String  @unique // "man-bw", "wartsila"
+  name        String // "MAN B&W", "Wärtsilä"
+  description String? @db.Text
+  founded     Int?
+  headquarters String?
+
+  metaTitle       String?
+  metaDescription String?
+
+  suppliers SupplierOEM[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+}
+
+// Many-to-many join tables. Explicit so we can attach metadata later
+// (e.g., is this a primary location or secondary).
+
+model SupplierLocation {
+  supplierId String
+  locationId String
+  isPrimary  Boolean @default(false)
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@id([supplierId, locationId])
+  @@index([locationId])
+}
+
+model SupplierCategory {
+  supplierId String
+  categoryId String
+
+  supplier Supplier     @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  category PartCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([supplierId, categoryId])
+  @@index([categoryId])
+}
+
+model SupplierOEM {
+  supplierId String
+  oemId      String
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  oem      OEM      @relation(fields: [oemId], references: [id], onDelete: Cascade)
+
+  @@id([supplierId, oemId])
+  @@index([oemId])
+}
+
+enum SupplierTier {
+  BASIC // free directory listing
+  ENHANCED // paid: logo, full description, RFQ workflow (Slice 5)
+  PREMIUM // paid: top placement, verified badge, analytics (Slice 5)
+}
+
+enum Region {
+  EUROPE
+  ASIA_PACIFIC
+  MIDDLE_EAST
+  AFRICA
+  NORTH_AMERICA
+  SOUTH_AMERICA
+  OCEANIA
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WAITLIST (existing, kept as-is)
+// ─────────────────────────────────────────────────────────────────────────────
+// Pre-launch waitlist signups. Survives the auth migration so we don't lose
+// existing signups.
+
+model WaitlistSignup {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  name       String?
+  rank       String?
+  vesselType String?
+  interest   String?
+  message    String?  @db.Text
+  source     String?
+  ipAddress  String?
+  userAgent  String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([interest])
+}
