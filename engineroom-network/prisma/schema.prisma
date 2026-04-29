@@ -1,0 +1,124 @@
+// EngineRoom Network database schema
+// Postgres database via Prisma, hosted on Supabase
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USERS & PROFILES
+// ─────────────────────────────────────────────────────────────────────────────
+// Authentication is handled by Clerk. We store a User record locally that
+// mirrors the Clerk user, identified by clerkId. This lets us own user data,
+// build relationships to other tables (posts, comments, etc.), and keeps
+// us portable if we ever migrate auth providers.
+//
+// Profile holds the marine-engineering-specific data: rank, vessel type,
+// specialism. Separated from User so we can iterate on profile structure
+// without touching authentication identity.
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique // Clerk's user ID (e.g., user_2abc123...)
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile?
+
+  @@index([clerkId])
+}
+
+model Profile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Display
+  displayName String?
+  headline    String? // e.g. "Chief Engineer | LNG carriers | MAN B&W expert"
+  bio         String? @db.Text
+
+  // Marine engineering identity
+  rank             EngineerRank?
+  primaryVesselType VesselType?
+  yearsExperience  Int?
+
+  // Location
+  homePort String?
+  country  String?
+
+  // Availability (for crew/specialist finder, populated later)
+  availability Availability @default(NOT_LOOKING)
+
+  // Visibility
+  isPublic Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([rank])
+  @@index([primaryVesselType])
+}
+
+enum EngineerRank {
+  CADET
+  FOURTH_ENGINEER
+  THIRD_ENGINEER
+  SECOND_ENGINEER
+  CHIEF_ENGINEER
+  MARINE_SUPERINTENDENT
+  SHIPYARD_ENGINEER
+  OFFSHORE_ENGINEER
+  ETO // Electro-Technical Officer
+  SURVEYOR
+  OTHER
+}
+
+enum VesselType {
+  TANKERS
+  CONTAINER_SHIPS
+  BULK_CARRIERS
+  LNG_LPG
+  OFFSHORE
+  CRUISE_PASSENGER
+  SPECIALISED
+  MULTIPLE
+}
+
+enum Availability {
+  AVAILABLE_NOW
+  AVAILABLE_30_DAYS
+  AVAILABLE_90_DAYS
+  CURRENTLY_WORKING
+  NOT_LOOKING
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WAITLIST (existing, kept as-is)
+// ─────────────────────────────────────────────────────────────────────────────
+// Pre-launch waitlist signups. Survives the auth migration so we don't lose
+// existing signups.
+
+model WaitlistSignup {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  name       String?
+  rank       String?
+  vesselType String?
+  interest   String?
+  message    String?  @db.Text
+  source     String?
+  ipAddress  String?
+  userAgent  String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([interest])
+}
