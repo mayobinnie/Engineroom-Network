@@ -171,7 +171,7 @@ This is Slice 1 of a multi-slice build. Each slice is shipped independently.
 - **Slice 6:** Crew and specialist finder
 - **Slice 7:** Monetisation (Stripe, Pro and Enterprise tiers)
 
-Each slice adds working features without breaking what came before.
+Each slice adds working features without breaking what came before. 
 
 ---
 
