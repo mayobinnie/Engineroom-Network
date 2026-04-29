@@ -179,4 +179,4 @@ Each slice adds working features without breaking what came before.
 
 For questions about this codebase, contact the development team.
 
-For everything else: hello@engineroomnetwork.com. 
+For everything else: hello@engineroomnetwork.com.

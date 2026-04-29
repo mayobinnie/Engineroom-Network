@@ -6,11 +6,9 @@ import { SupplierCard, DirectoryEmptyState } from "@/components/SupplierCard";
 import Link from "next/link";
 import type { Metadata } from "next";
 
-// Generate static params for all location pages at build time
-export async function generateStaticParams() {
-  const locations = await prisma.location.findMany({ select: { slug: true } });
-  return locations.map((loc) => ({ location: loc.slug }));
-}
+// Force dynamic rendering: ensures pages always reflect current data
+// and new locations added via seed/admin appear without redeploy
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,

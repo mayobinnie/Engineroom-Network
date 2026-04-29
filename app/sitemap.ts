@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = "https://engineroomnetwork.com";
   const now = new Date();
@@ -21,10 +23,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // Pull all directory data for dynamic URLs
-  const [locations, categories, oems] = await Promise.all([
+  const [locations, categories, oems, suppliers] = await Promise.all([
     prisma.location.findMany({ select: { slug: true, updatedAt: true, isMajorHub: true } }),
     prisma.partCategory.findMany({ select: { slug: true, updatedAt: true } }),
     prisma.oEM.findMany({ select: { slug: true, updatedAt: true } }),
+    prisma.supplier.findMany({
+      where: { isPublished: true },
+      select: { slug: true, updatedAt: true },
+    }),
   ]);
 
   const locationPages: MetadataRoute.Sitemap = locations.map((loc) => ({
@@ -43,6 +49,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${base}/oem/${oem.slug}`,
     lastModified: oem.updatedAt,
     priority: 0.7,
+  }));
+
+  // Individual supplier detail pages (high priority once curated)
+  const supplierPages: MetadataRoute.Sitemap = suppliers.map((s) => ({
+    url: `${base}/supplier/${s.slug}`,
+    lastModified: s.updatedAt,
+    priority: 0.8,
   }));
 
   // Combination pages: location × category (limited to major hubs to avoid bloat)
@@ -75,6 +88,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...locationPages,
     ...categoryPages,
     ...oemPages,
+    ...supplierPages,
     ...locationCategoryPages,
     ...oemLocationPages,
   ];

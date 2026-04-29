@@ -6,10 +6,7 @@ import { SupplierCard, DirectoryEmptyState } from "@/components/SupplierCard";
 import Link from "next/link";
 import type { Metadata } from "next";
 
-export async function generateStaticParams() {
-  const categories = await prisma.partCategory.findMany({ select: { slug: true } });
-  return categories.map((cat) => ({ category: cat.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,

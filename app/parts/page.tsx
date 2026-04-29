@@ -4,6 +4,8 @@ import { Footer } from "@/components/Footer";
 import Link from "next/link";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Marine Parts Categories | EngineRoom Network",
   description: "Browse marine engineering parts and equipment by category. Find suppliers for turbochargers, fuel injection, electrical equipment, pumps, and more.",

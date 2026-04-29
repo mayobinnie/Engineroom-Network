@@ -6,10 +6,7 @@ import { SupplierCard, DirectoryEmptyState } from "@/components/SupplierCard";
 import Link from "next/link";
 import type { Metadata } from "next";
 
-export async function generateStaticParams() {
-  const oems = await prisma.oEM.findMany({ select: { slug: true } });
-  return oems.map((oem) => ({ manufacturer: oem.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
