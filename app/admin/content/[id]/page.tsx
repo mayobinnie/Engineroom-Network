@@ -28,7 +28,7 @@ export default async function AdminContentEditPage({
       <Nav />
       <main className="bg-sail min-h-screen">
         <section className="py-12 px-6">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <p className="text-signal font-mono text-sm uppercase tracking-wide mb-1">
               Admin / Content / Edit
             </p>

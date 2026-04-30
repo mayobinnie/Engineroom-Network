@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { LinkSuggester } from "./LinkSuggester";
 
 interface ArticleData {
   id: string;
@@ -37,6 +38,28 @@ export function ArticleEditForm({ article }: { article: ArticleData }) {
   const [metaTitle, setMetaTitle] = useState(article.metaTitle ?? "");
   const [metaDescription, setMetaDescription] = useState(article.metaDescription ?? "");
   const [tagsStr, setTagsStr] = useState(article.tags.join(", "));
+
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+
+  // Replace the FIRST occurrence of replacementText (case-insensitive) starting
+  // at position with the markdown link. Uses the suggester's match position
+  // to be precise.
+  function handleInsertLink(markdown: string, replacementText: string, position: number) {
+    const before = content.slice(0, position);
+    const after = content.slice(position + replacementText.length);
+    const newContent = before + markdown + after;
+    setContent(newContent);
+
+    // Focus textarea so user sees the change
+    setTimeout(() => {
+      if (contentRef.current) {
+        contentRef.current.focus();
+        const newCursor = position + markdown.length;
+        contentRef.current.setSelectionRange(newCursor, newCursor);
+      }
+    }, 0);
+  }
+
 
   async function handleSave() {
     setSubmitting(true);
@@ -121,7 +144,8 @@ export function ArticleEditForm({ article }: { article: ArticleData }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+      <div className="space-y-6 min-w-0">
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-sm">{error}</div>
       )}
@@ -178,6 +202,7 @@ export function ArticleEditForm({ article }: { article: ArticleData }) {
               Content (markdown)
             </label>
             <textarea
+              ref={contentRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={20}
@@ -317,6 +342,16 @@ export function ArticleEditForm({ article }: { article: ArticleData }) {
           </a>
         )}
       </div>
+      </div>
+
+      {/* Right sidebar: link suggester */}
+      <aside className="hidden lg:block">
+        <LinkSuggester
+          content={content}
+          onInsertLink={handleInsertLink}
+          currentArticleSlug={article.slug}
+        />
+      </aside>
     </div>
   );
 }
