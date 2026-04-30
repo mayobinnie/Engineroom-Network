@@ -21,10 +21,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/parts`, lastModified: now, priority: 0.9 },
     { url: `${base}/oem`, lastModified: now, priority: 0.9 },
     { url: `${base}/vessels`, lastModified: now, priority: 0.9 },
+    { url: `${base}/articles`, lastModified: now, priority: 0.9 },
   ];
 
   // Pull all directory data for dynamic URLs
-  const [locations, categories, oems, suppliers, vesselTypes] = await Promise.all([
+  const [locations, categories, oems, suppliers, vesselTypes, articles] = await Promise.all([
     prisma.location.findMany({ select: { slug: true, updatedAt: true, isMajorHub: true } }),
     prisma.partCategory.findMany({ select: { slug: true, updatedAt: true } }),
     prisma.oEM.findMany({ select: { slug: true, updatedAt: true } }),
@@ -34,6 +35,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
     prisma.vesselClass.findMany({
       where: { isPublished: true },
+      select: { slug: true, updatedAt: true },
+    }),
+    prisma.article.findMany({
+      where: {
+        status: "PUBLISHED",
+        type: { in: ["ARTICLE", "COMMENTARY"] },
+      },
       select: { slug: true, updatedAt: true },
     }),
   ]);
@@ -70,6 +78,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  // Articles (Knowledge hub)
+  const articlePages: MetadataRoute.Sitemap = articles.map((a) => ({
+    url: `${base}/articles/${a.slug}`,
+    lastModified: a.updatedAt,
+    priority: 0.7,
+  }));
+
   // Combination pages: location × category (limited to major hubs to avoid bloat)
   const majorHubs = locations.filter((l) => l.isMajorHub);
   const locationCategoryPages: MetadataRoute.Sitemap = [];
@@ -102,6 +117,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...oemPages,
     ...supplierPages,
     ...vesselPages,
+    ...articlePages,
     ...locationCategoryPages,
     ...oemLocationPages,
   ];

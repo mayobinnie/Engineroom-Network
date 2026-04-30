@@ -17,8 +17,10 @@
     "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
     "@clerk/nextjs": "^6.9.6",
     "@prisma/client": "^5.22.0",
+    "marked": "^15.0.4",
     "next": "^15.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -34,6 +36,7 @@
     "postcss": "^8.4.49",
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.15",
+    "@tailwindcss/typography": "^0.5.15",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"
   },

@@ -12,7 +12,7 @@ export const metadata = {
 export default async function AdminDashboard() {
   await requireAdmin();
 
-  const [supplierCount, publishedCount, locationCount, categoryCount, oemCount, userCount, vesselCount, publishedVesselCount] =
+  const [supplierCount, publishedCount, locationCount, categoryCount, oemCount, userCount, vesselCount, publishedVesselCount, articleCount, draftArticleCount] =
     await Promise.all([
       prisma.supplier.count(),
       prisma.supplier.count({ where: { isPublished: true } }),
@@ -22,6 +22,8 @@ export default async function AdminDashboard() {
       prisma.user.count(),
       prisma.vesselClass.count(),
       prisma.vesselClass.count({ where: { isPublished: true } }),
+      prisma.article.count({ where: { status: "PUBLISHED" } }),
+      prisma.article.count({ where: { status: "DRAFT" } }),
     ]);
 
   return (
@@ -41,12 +43,25 @@ export default async function AdminDashboard() {
               <Stat label="Members" value={userCount} />
               <Stat label="Vessel types (total)" value={vesselCount} />
               <Stat label="Published vessels" value={publishedVesselCount} />
+              <Stat label="Published articles" value={articleCount} />
+              <Stat label="Draft articles" value={draftArticleCount} />
               <Stat label="Locations" value={locationCount} />
               <Stat label="Part Categories" value={categoryCount} />
               <Stat label="OEMs" value={oemCount} />
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
+              <Link
+                href="/admin/content"
+                className="block border border-mist rounded-sm p-6 bg-white hover:border-signal transition-colors md:col-span-2"
+              >
+                <h2 className="font-display font-bold text-lg text-hull mb-2">
+                  Content Queue →
+                </h2>
+                <p className="text-steel text-sm">
+                  Generate, review, and publish articles, commentary, LinkedIn posts and newsletters. {draftArticleCount > 0 && <span className="text-brass font-semibold">{draftArticleCount} draft{draftArticleCount === 1 ? "" : "s"} awaiting review.</span>}
+                </p>
+              </Link>
               <Link
                 href="/admin/suppliers"
                 className="block border border-mist rounded-sm p-6 bg-white hover:border-signal transition-colors"

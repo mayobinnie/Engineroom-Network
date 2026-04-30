@@ -347,3 +347,65 @@ model WaitlistSignup {
   @@index([createdAt])
   @@index([interest])
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTENT (Slice 4c)
+// ─────────────────────────────────────────────────────────────────────────────
+// Editorial content system: articles, news commentary, LinkedIn drafts, email
+// drafts. AI-assisted generation, but every piece passes through human review
+// before publishing. Drafts visible only to admins; published articles live
+// at /articles/[slug] for the public blog.
+
+model Article {
+  id        String      @id @default(cuid())
+  slug      String      @unique // url-safe: "vlcc-engine-room-watchkeeping"
+  type      ContentType
+  status    ContentStatus @default(DRAFT)
+
+  // Editorial content
+  title       String
+  excerpt     String?  @db.Text // short summary for listings (and meta description)
+  content     String   @db.Text // full body, markdown
+  seoKeyword  String?  // primary keyword this targets
+
+  // For COMMENTARY type: source article being commented on
+  sourceTitle String?
+  sourceUrl   String?
+  sourceName  String?  // e.g. "TradeWinds", "Lloyd's List"
+
+  // Authorship
+  authorName    String? // display name of human author/editor
+  generatedByAI Boolean @default(false) // was this AI-drafted?
+  reviewedBy    String? // who reviewed/edited before publishing
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  // Tags (simple text array for now; could become a relation later)
+  tags String[]
+
+  // Publishing
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+  @@index([status])
+  @@index([type])
+  @@index([publishedAt])
+}
+
+enum ContentType {
+  ARTICLE      // original educational/technical content
+  COMMENTARY   // commentary on industry news (with source attribution)
+  LINKEDIN     // LinkedIn post draft
+  EMAIL        // newsletter draft
+}
+
+enum ContentStatus {
+  DRAFT      // generated or being written, not visible
+  APPROVED   // reviewed, ready to publish
+  PUBLISHED  // live on the public site (or marked as sent for LinkedIn/email)
+  REJECTED   // not going to publish, kept for record
+}

@@ -20,6 +20,9 @@ export function Nav() {
           <Link href="/community" className="hover:text-signal transition-colors">
             Community
           </Link>
+          <Link href="/articles" className="hover:text-signal transition-colors">
+            Knowledge
+          </Link>
           <Link href="/contact" className="hover:text-signal transition-colors">
             Contact
           </Link>
