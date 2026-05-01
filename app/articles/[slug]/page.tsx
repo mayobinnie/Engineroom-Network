@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
+import { Comments } from "@/components/Comments";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { marked } from "marked";
@@ -157,6 +158,9 @@ export default async function ArticlePage({
                 ))}
               </div>
             )}
+
+            {/* Comments */}
+            <Comments targetType="ARTICLE" targetId={article.id} />
 
             {/* Back link */}
             <div className="mt-12">

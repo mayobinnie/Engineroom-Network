@@ -12,7 +12,7 @@ export const metadata = {
 export default async function AdminDashboard() {
   await requireAdmin();
 
-  const [supplierCount, publishedCount, locationCount, categoryCount, oemCount, userCount, vesselCount, publishedVesselCount, articleCount, draftArticleCount] =
+  const [supplierCount, publishedCount, locationCount, categoryCount, oemCount, userCount, vesselCount, publishedVesselCount, articleCount, draftArticleCount, commentCount, reportedCommentCount] =
     await Promise.all([
       prisma.supplier.count(),
       prisma.supplier.count({ where: { isPublished: true } }),
@@ -24,6 +24,8 @@ export default async function AdminDashboard() {
       prisma.vesselClass.count({ where: { isPublished: true } }),
       prisma.article.count({ where: { status: "PUBLISHED" } }),
       prisma.article.count({ where: { status: "DRAFT" } }),
+      prisma.comment.count({ where: { isHidden: false } }),
+      prisma.comment.count({ where: { isReported: true, isHidden: false } }),
     ]);
 
   return (
@@ -45,6 +47,8 @@ export default async function AdminDashboard() {
               <Stat label="Published vessels" value={publishedVesselCount} />
               <Stat label="Published articles" value={articleCount} />
               <Stat label="Draft articles" value={draftArticleCount} />
+              <Stat label="Comments" value={commentCount} />
+              <Stat label="Reported comments" value={reportedCommentCount} />
               <Stat label="Locations" value={locationCount} />
               <Stat label="Part Categories" value={categoryCount} />
               <Stat label="OEMs" value={oemCount} />
@@ -60,6 +64,21 @@ export default async function AdminDashboard() {
                 </h2>
                 <p className="text-steel text-sm">
                   Generate, review, and publish articles, commentary, LinkedIn posts and newsletters. {draftArticleCount > 0 && <span className="text-brass font-semibold">{draftArticleCount} draft{draftArticleCount === 1 ? "" : "s"} awaiting review.</span>}
+                </p>
+              </Link>
+              <Link
+                href="/admin/comments"
+                className="block border border-mist rounded-sm p-6 bg-white hover:border-signal transition-colors md:col-span-2"
+              >
+                <h2 className="font-display font-bold text-lg text-hull mb-2">
+                  Comment Moderation →
+                </h2>
+                <p className="text-steel text-sm">
+                  {reportedCommentCount > 0 ? (
+                    <span className="text-brass font-semibold">{reportedCommentCount} reported comment{reportedCommentCount === 1 ? "" : "s"} awaiting review.</span>
+                  ) : (
+                    "Review reported comments, hide spam, ban abusive users."
+                  )}
                 </p>
               </Link>
               <Link

@@ -30,7 +30,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  profile Profile?
+  // Moderation: if true, user cannot post comments. Existing comments
+  // remain visible unless individually hidden.
+  commentsBanned Boolean @default(false)
+
+  profile  Profile?
+  comments Comment[]
 
   @@index([clerkId])
 }
@@ -408,4 +413,54 @@ enum ContentStatus {
   APPROVED   // reviewed, ready to publish
   PUBLISHED  // live on the public site (or marked as sent for LinkedIn/email)
   REJECTED   // not going to publish, kept for record
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMMENTS (Slice 4d)
+// ─────────────────────────────────────────────────────────────────────────────
+// Member-only comments on articles, commentary pieces, and vessel guides.
+// One level of replies (parent → reply, but no reply-to-reply). Soft-delete
+// only (isHidden flag) so admins can restore if needed.
+
+model Comment {
+  id      String @id @default(cuid())
+  content String @db.Text
+
+  // What this comment is on. Polymorphic: targetType determines which entity
+  // is being commented on. We don't use a hard FK because the target may be
+  // an Article OR a VesselClass.
+  targetType CommentTargetType
+  targetId   String // id of the Article or VesselClass
+
+  // Author
+  authorUserId String
+  author       User   @relation(fields: [authorUserId], references: [id], onDelete: Cascade)
+
+  // Threading: one level only. parentCommentId nullable (top-level comments).
+  parentCommentId String?
+  parent          Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies         Comment[] @relation("CommentReplies")
+
+  // Moderation
+  isHidden    Boolean   @default(false) // hidden by admin
+  hiddenAt    DateTime?
+  hiddenBy    String? // admin email who hid it
+  isPinned    Boolean   @default(false) // pinned by admin to top
+  isReported  Boolean   @default(false) // flagged by another user
+  reportCount Int       @default(0)
+  isEdited    Boolean   @default(false) // user edited after posting
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([targetType, targetId])
+  @@index([authorUserId])
+  @@index([parentCommentId])
+  @@index([isHidden])
+  @@index([createdAt])
+}
+
+enum CommentTargetType {
+  ARTICLE       // Article (type ARTICLE or COMMENTARY)
+  VESSEL_CLASS  // VesselClass guide
 }

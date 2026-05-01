@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
+import { Comments } from "@/components/Comments";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -144,21 +145,8 @@ export default async function VesselTypePage({
               </Section>
             )}
 
-            {/* Correction CTA */}
-            <div className="mt-12 p-6 bg-mist/30 border border-mist rounded-sm">
-              <h3 className="font-display font-bold text-lg text-hull mb-2 not-prose">
-                Correction or improvement?
-              </h3>
-              <p className="text-sm text-steel mb-4 not-prose">
-                We rely on the marine engineering community to keep these guides accurate. If you spot something that doesn't match real-world experience or want to add detail from your own work, please get in touch.
-              </p>
-              <Link
-                href="/contact"
-                className="inline-block text-signal font-semibold hover:underline text-sm not-prose"
-              >
-                Contact us →
-              </Link>
-            </div>
+            {/* Comments (replaces the static "correction" CTA, now interactive) */}
+            <Comments targetType="VESSEL_CLASS" targetId={vesselType.id} />
           </div>
         </section>
       </main>
